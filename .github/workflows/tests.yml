@@ -1,0 +1,60 @@
+name: Run Automation Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar tests de API
+        run: pytest tests_api/ -m api -v --html=reports/api_report.html --self-contained-html
+
+      - name: Subir reporte como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-report
+          path: reports/
+
+  # Los tests de UI (Selenium) requieren un navegador headless.
+  # Se dejan como job separado para poder activarlos cuando el runner
+  # tenga Chrome configurado (setup-chrome action).
+  ui-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Instalar Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Ejecutar tests de UI
+        run: pytest test/ -m ui -v --html=reports/ui_report.html --self-contained-html
+
+      - name: Subir reporte y capturas como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-report
+          path: reports/

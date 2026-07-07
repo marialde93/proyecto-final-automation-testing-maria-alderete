@@ -1,0 +1,36 @@
+{
+  "casos_validos": [
+    {
+      "username": "standard_user",
+      "password": "secret_sauce",
+      "descripcion": "usuario estándar"
+    },
+    {
+      "username": "problem_user",
+      "password": "secret_sauce",
+      "descripcion": "usuario con problemas conocidos de UI"
+    },
+    {
+      "username": "performance_glitch_user",
+      "password": "secret_sauce",
+      "descripcion": "usuario con demoras de performance"
+    }
+  ],
+  "casos_invalidos": [
+    {
+      "username": "standard_user",
+      "password": "password_incorrecta",
+      "descripcion": "password inválida"
+    },
+    {
+      "username": "locked_out_user",
+      "password": "secret_sauce",
+      "descripcion": "usuario bloqueado"
+    },
+    {
+      "username": "",
+      "password": "",
+      "descripcion": "campos vacíos"
+    }
+  ]
+}

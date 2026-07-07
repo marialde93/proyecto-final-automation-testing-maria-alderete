@@ -1,3 +1,4 @@
+import datetime
 import os
 import pathlib
 
@@ -36,7 +37,7 @@ def login_in_driver(driver):
     return driver
 
 
-# ── NUEVO: capturas de pantalla automáticas en fallos de UI ─────────────────
+# ── Capturas de pantalla automáticas en fallos de UI ─────────────────────────
 
 target = pathlib.Path("reports/screens")
 target.mkdir(parents=True, exist_ok=True)
@@ -45,30 +46,40 @@ target.mkdir(parents=True, exist_ok=True)
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Toma un screenshot cuando un test UI falla en la fase 'call'
-    y lo adjunta al reporte HTML de pytest-html."""
+    y lo adjunta al reporte HTML de pytest-html.
+
+    IMPORTANTE: no usamos hasattr(report, "extra") para decidir si adjuntar,
+    porque pytest-html crea ese atributo en su propio hookwrapper y, al ser
+    nuestro hook tryfirst=True, puede ejecutarse antes. Por eso construimos
+    la lista con getattr(..., []) y la reasignamos siempre al final.
+    """
     outcome = yield
     report = outcome.get_result()
+
+    extra = getattr(report, "extra", [])
 
     if report.when == "call" and report.failed:
         driver_fixture = item.funcargs.get("driver") or item.funcargs.get(
             "login_in_driver"
         )
         if driver_fixture:
-            file_name = target / f"{item.name}.png"
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            file_name = target / f"{item.name}_{timestamp}.png"
             try:
                 driver_fixture.save_screenshot(str(file_name))
-                logger.error("Screenshot guardado en %s tras fallo de %s", file_name, item.name)
-            except Exception as exc:  # noqa: BLE001
-                logger.error("No se pudo guardar el screenshot: %s", exc)
-                return
-
-            if hasattr(report, "extra"):
-                report.extra.append(
+                logger.error(
+                    "Screenshot guardado en %s tras fallo de %s", file_name, item.name
+                )
+                extra.append(
                     {"name": "screenshot", "format": "image", "content": str(file_name)}
                 )
+            except Exception as exc:  # noqa: BLE001
+                logger.error("No se pudo guardar el screenshot: %s", exc)
+
+    report.extra = extra
 
 
-# ── NUEVO: columna URL extra en la tabla del reporte HTML ───────────────────
+# ── Columna URL extra en la tabla del reporte HTML ───────────────────────────
 
 
 def pytest_html_report_title(report):

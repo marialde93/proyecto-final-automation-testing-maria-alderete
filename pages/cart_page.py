@@ -11,6 +11,7 @@ class CartPage:
 
     CART_ITEM = (By.CLASS_NAME, "cart_item")
     CART_ITEM_NAME = (By.CLASS_NAME, "inventory_item_name")
+    CHECKOUT_BUTTON = (By.ID, "checkout")
 
     def __init__(self, driver, timeout=10):
         self.driver = driver
@@ -23,3 +24,8 @@ class CartPage:
     def obtener_nombre_primer_item(self):
         items = self.obtener_items()
         return items[0].find_element(*self.CART_ITEM_NAME).text
+
+    def iniciar_checkout(self):
+        """Hace click en 'Checkout' para pasar al formulario de datos del comprador."""
+        boton = self.wait.until(EC.element_to_be_clickable(self.CHECKOUT_BUTTON))
+        boton.click()
